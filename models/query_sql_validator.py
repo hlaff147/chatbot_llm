@@ -2,7 +2,6 @@ from config.settings import openai_api_key
 from langchain_community.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage
 
-# Inicializar o modelo de chat
 chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=openai_api_key)
 
 def construct_validation_message():
@@ -49,15 +48,18 @@ def get_business_rules_message():
 Regras de validação de negócio:
 1. A query deve utilizar apenas as colunas listadas acima.
 2. Nenhuma query deve referenciar tabelas ou colunas inexistentes.
-3. O uso de `TARGET` deve ser consistente com sua definição como um indicador binário de inadimplência.
+3. Nenhuma query deve executar operações de alteração, como:
+   - INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE.
+   - Apenas queries do tipo SELECT são permitidas.
+4. O uso de `TARGET` deve ser consistente com sua definição como um indicador binário de inadimplência.
    - Exemplo: Calcular inadimplência média (AVG(TARGET)) para grupos específicos.
-4. O uso de `VAR4` deve verificar explicitamente valores binários.
+5. O uso de `VAR4` deve verificar explicitamente valores binários.
    - Exemplo: `WHERE VAR4 = 1` para registros onde o indivíduo faleceu.
-5. Agregações devem estar acompanhadas de cláusulas `GROUP BY` apropriadas.
-6. Caso utilize `IDADE`, deve ser possível identificar o contexto (exemplo: média de idade ou distribuição por faixa etária).
-7. Qualquer filtro ou cláusula `WHERE` deve ser consistente com os dados disponíveis no esquema.
+6. Agregações devem estar acompanhadas de cláusulas `GROUP BY` apropriadas.
+7. Caso utilize `IDADE`, deve ser possível identificar o contexto (exemplo: média de idade ou distribuição por faixa etária).
+8. Qualquer filtro ou cláusula `WHERE` deve ser consistente com os dados disponíveis no esquema.
    - Exemplo: Filtrar por `VAR8 = 'Alta'` está correto, mas `VAR8 = 'Média-Alta'` não existe.
-8. Verifique se os nomes das colunas estão corretamente referenciados no contexto do esquema.
+9. Verifique se os nomes das colunas estão corretamente referenciados no contexto do esquema.
 """
 
 def get_syntax_rules_message():
@@ -75,7 +77,20 @@ Regras de validação sintática:
   - Número incorreto de argumentos para funções.
   - Cast para o tipo de dados incorreto.
   - Uso inadequado de colunas em joins.
+- Bloqueie queries que contenham as seguintes palavras-chave:
+  - INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE.
 """
+
+def contains_prohibited_keywords(query):
+    """
+    Verifica se a query contém palavras-chave proibidas.
+    """
+    prohibited_keywords = ["INSERT", "UPDATE", "DELETE", "DROP", "CREATE", "ALTER", "TRUNCATE"]
+    for keyword in prohibited_keywords:
+        if keyword in query.upper():
+            return True
+    return False
+
 
 def get_response_format_message():
     """
@@ -93,6 +108,12 @@ def validate_query_syntax(query_sql):
     Valida a sintaxe e aderência às regras de negócio de uma query SQL.
     """
     try:
+        if contains_prohibited_keywords(query_sql):
+            return {
+                "valido": False,
+                "racional": "Inválida: A query contém operações proibidas, como INSERT, UPDATE, DELETE, ou ALTER."
+            }
+
         system_message_content = construct_validation_message()
         system_message = SystemMessage(content=system_message_content)
         
@@ -116,4 +137,3 @@ def validate_query_syntax(query_sql):
             "valido": False,
             "racional": f"Erro ao validar a query: {str(e)}"
         }
-

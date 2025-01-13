@@ -6,8 +6,8 @@ from config.settings import csv_path
 from models.analyse_query_response import analyse_response_query
 from models.input_validator import validate_user_input
 from models.query_generator import generate_query
+from models.query_sql_validator import validate_query_syntax
 from utils.sql_extractor import extract_sql_query
-from utils.executor_duck import execute_query_on_dataframe
 
 df = pd.read_csv(csv_path)
 
@@ -31,8 +31,14 @@ if st.button("Executar"):
         
         sql_query_replaced = sql_query.replace("tabela", "credit")
         st.code(f"Query SQL Gerada:\n{sql_query_replaced}", language="sql")
-        exit()
-        # TODO: Validar Codigos maleficos
+
+        validation_result = validate_query_syntax(sql_query_replaced)
+
+        if not validation_result["valido"]:
+            st.error(f"Query Inválida: {validation_result['racional']}")
+            st.stop()
+
+        st.success("Query SQL validada com sucesso!")
 
         st.write("**Executando query no dataset...**")
         

@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 import json
+from aws_athena.query_consult import execute_query
 from config.settings import csv_path
 from models.analyse_query_response import analyse_response_query
 from models.input_validator import validate_user_input
 from models.query_generator import generate_query
-from models.query_sql_validator import validate_query_syntax
 from utils.sql_extractor import extract_sql_query
 from utils.executor_duck import execute_query_on_dataframe
 
@@ -29,34 +29,28 @@ if st.button("Executar"):
         sql_query = extract_sql_query(sql_response)
 
         
-        sql_query_replaced = sql_query.replace("tabela", "df")
+        sql_query_replaced = sql_query.replace("tabela", "credit")
         st.code(f"Query SQL Gerada:\n{sql_query_replaced}", language="sql")
-        
-        # Validar a query SQL
-        # st.write("**Validando a query SQL...**")
-        # validation_result = validate_query_syntax(sql_query_replaced)
-        
-        # Verificar se a query é válida
-        # if validation_result["valido"]:
-        #     st.success("A query SQL é válida!")
-        #     st.write("Racional:")
-        #     st.write(validation_result["racional"])
-        # else:
-        #     st.error("A query SQL é inválida!")
-        #     st.write("Erro encontrado:")
-        #     st.write(validation_result["racional"])
-        #     st.stop()  # Interrompe a execução do Streamlit
+        exit()
+        # TODO: Validar Codigos maleficos
 
         st.write("**Executando query no dataset...**")
-        result = execute_query_on_dataframe(sql_query_replaced, df)
+        
+        df_result = execute_query(sql_query_replaced, "chatbot_athena_db", "s3://chatbot-dados-analise/result/")
 
-        if isinstance(result, pd.DataFrame):
+        if df_result is not None:
+          print("Resultado da Consulta:")
+          print(df_result)
+        else:
+          print("A consulta falhou.")
+
+        if isinstance(df_result, pd.DataFrame):
             st.write("**Resultado da Query:**")
-            st.dataframe(result)
+            st.dataframe(df_result)
 
             st.write("**Gerando análise explicativa...**")
-            analysis = analyse_response_query(result)
+            analysis = analyse_response_query(df_result)
             st.write("**Resposta reformulada:**")
             st.write(analysis["analise"])
         else:
-            st.error(f"Erro ao executar a query: {result}")
+            st.error(f"Erro ao executar a query: {df_result}")

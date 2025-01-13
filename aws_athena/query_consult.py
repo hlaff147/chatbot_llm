@@ -1,5 +1,4 @@
 import boto3
-import pandas as pd
 import time
 import os
 import awswrangler as wr
@@ -42,13 +41,7 @@ def execute_query(query, database, output_location):
         result_file_path = f"{output_location}{query_execution_id}.csv"
         print(f"Resultado salvo em: {result_file_path}")
 
-        # Ler o arquivo CSV do S3 e converter para DataFrame
-        s3_client = boto3.client("s3")
-        bucket_name = output_location.split("/")[2]
-        key = "/".join(output_location.split("/")[3:] + [f"{query_execution_id}.csv"])
-        
         # Baixar o arquivo do S3
-        # s3_client.download_file(bucket_name, key, "query_result.csv")
         df = wr.s3.read_csv(result_file_path, encoding='ISO-8859-1', path_suffix="csv")
         return df
 

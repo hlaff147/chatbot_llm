@@ -6,16 +6,52 @@ chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=openai_ap
 
 
 def dataset_description():
-    """Descrição do dataset e suas colunas."""
+    """Descrição do dataset e suas colunas, com exemplos detalhados."""
     return """
-O dataset contém as seguintes colunas:
-- REF_DATE: Data de referência do registro.
-- TARGET: Alvo binário de inadimplência (1: Mau Pagador, i.e. atraso > 60 dias em 2 meses).
-- VAR2: Sexo do indivíduo (masculino/feminino).
-- IDADE: Idade do indivíduo.
-- VAR4: Flag de óbito (indica se o indivíduo faleceu).
-- VAR5: Unidade federativa (UF) brasileira.
-- VAR8: Classe social estimada.
+O dataset contém as seguintes colunas, com exemplos para maior clareza:
+
+1. REF_DATE: Data de referência do registro.
+   - Tipo: STRING (em formato ISO 8601).
+   - Exemplo: "2017-06-01 00:00:00+00:00".
+
+2. TARGET: Alvo binário de inadimplência.
+   - Tipo: INT.
+   - Valores possíveis:
+     - `1`: Mau pagador (inadimplência > 60 dias em 2 meses).
+     - `0`: Bom pagador.
+   - Exemplo: `1` ou `0`.
+
+3. VAR2: Sexo do indivíduo.
+   - Tipo: STRING.
+   - Valores possíveis:
+     - `M`: Masculino.
+     - `F`: Feminino.
+   - Exemplo: `M` ou `F`.
+
+4. IDADE: Idade do indivíduo em anos.
+   - Tipo: FLOAT.
+   - Exemplo: `34.137` (representando aproximadamente 34 anos e 50 dias).
+
+5. VAR4: Flag de óbito.
+   - Tipo: INT.
+   - Valores possíveis:
+     - `1`: Indivíduo faleceu.
+     - `0`: Indivíduo está vivo.
+   - Exemplo: `1` ou `0`.
+
+6. VAR5: Unidade Federativa (UF) brasileira.
+   - Tipo: STRING.
+   - Valores possíveis: Siglas de estados brasileiros (ex.: BA, PE, PB, RS).
+   - Exemplo: `PE` (Pernambuco), `SP` (São Paulo).
+
+7. VAR8: Classe social estimada.
+   - Tipo: STRING.
+   - Valores possíveis: Classificações qualitativas, como "Alta", "Média", "Baixa", "Altíssima".
+   - Exemplo: `Alta` ou `Média`.
+
+Observação Geral:
+- As queries devem operar apenas nas colunas descritas acima.
+- Nenhuma coluna ou tabela não listada deve ser utilizada.
 """
 
 def query_rules():
@@ -23,7 +59,7 @@ def query_rules():
     return """
 Regras para a query:
 - Sempre utilize apenas as colunas listadas acima.
-- Certifique-se de que o nome da tabela é "tabela" (substituída posteriormente no código).
+- Certifique-se de que o nome da tabela é "tabela".
 - Use agregações (`AVG`, `SUM`, etc.) somente se solicitado explicitamente na pergunta.
 - Se a pergunta incluir filtros (ex.: "apenas para UF = 'SP'"), adicione uma cláusula `WHERE` apropriada.
 - Sempre agrupe os resultados (`GROUP BY`) quando necessário para cálculos agregados.

@@ -3,7 +3,7 @@
 
 # Chatbot de Análise de Dados com LLMs
 
-Este é um projeto **WIP (Work In Progress)** que implementa um chatbot para análise de dados utilizando **Streamlit**, **Pandas**, **DuckDB** e **LLMs (Large Language Models)**. O objetivo é interpretar perguntas feitas em linguagem natural, convertê-las em queries SQL, executar essas queries em um banco de dados local (ou futuramente na nuvem), e retornar insights significativos de maneira clara e explicativa.
+Este é um projeto **WIP (Work In Progress)** que implementa um chatbot para análise de dados utilizando **Streamlit**, **Pandas**, **DuckDB**, **AWS Athena**, **Boto3**, e **LLMs (Large Language Models)**. O objetivo é interpretar perguntas feitas em linguagem natural, convertê-las em queries SQL, executar essas queries em um banco de dados local ou na nuvem, e retornar insights significativos de maneira clara e explicativa.
 
 ---
 
@@ -11,10 +11,11 @@ Este é um projeto **WIP (Work In Progress)** que implementa um chatbot para an�
 
 - **Conversão de Linguagem Natural para SQL**: Perguntas feitas em linguagem natural são convertidas em queries SQL utilizando modelos de linguagem.
 - **Validação de Perguntas e Queries**:
-  - Garantia de aderência às regras de negócio e esquema do banco.
-  - Verificação de sintaxe SQL para evitar erros comuns.
-- **Execução Local**:
-  - Integração com **DuckDB** para executar queries localmente no dataset fornecido.
+  - Verificação de sintaxe SQL e segurança da query.
+  - Bloqueio de operações de modificação do banco (ex.: `INSERT`, `UPDATE`, `DELETE`).
+- **Execução Local e em Nuvem**:
+  - Integração com **DuckDB** para execução local de queries.
+  - Integração com **AWS Athena** para execução de queries na nuvem.
 - **Interface Intuitiva**:
   - Desenvolvido com **Streamlit**, permitindo interação simples e amigável.
 - **Respostas Explicativas**:
@@ -28,14 +29,15 @@ Este é um projeto **WIP (Work In Progress)** que implementa um chatbot para an�
 project/
 ├── main.py               # Código principal (integração Streamlit)
 ├── config/
-│   └── settings.py       # Configurações do projeto (ex.: caminho do dataset)
+│   └── settings.py       # Configurações do projeto (ex.: caminho do dataset, credenciais AWS)
 ├── models/
 │   ├── query_generator.py           # Geração de queries SQL
 │   ├── input_validator.py           # Validação de entrada do usuário
 │   ├── analyse_query_response.py    # Análise dos resultados da query
-│   ├── query_validator.py           # Validação sintática e de negócio das queries
+│   ├── query_sql_validator.py       # Validação sintática das queries SQL
 ├── utils/
 │   ├── executor_duck.py             # Execução de queries com DuckDB
+│   ├── executor_athena.py           # Execução de queries com AWS Athena
 │   ├── sql_extractor.py             # Extração de SQL a partir da resposta do GPT
 ├── data/
 │   └── dataset.csv                  # Dataset utilizado pelo chatbot
@@ -51,11 +53,10 @@ project/
   - [Streamlit](https://streamlit.io/): Interface do chatbot.
   - [DuckDB](https://duckdb.org/): Execução local de queries SQL.
   - [Pandas](https://pandas.pydata.org/): Processamento e manipulação de dados.
+  - [AWS Athena](https://aws.amazon.com/athena/): Execução de queries SQL na nuvem.
+  - [Boto3](https://boto3.amazonaws.com/): Integração com serviços AWS.
   - [OpenAI GPT](https://openai.com/): Conversão de linguagem natural para SQL.
   
-- **Integração com LLM**:
-  - Modelos como OpenAI GPT para geração de queries e análise.
-
 ---
 
 ## 📝 Esquema do Banco de Dados
@@ -78,11 +79,17 @@ O chatbot utiliza um dataset que contém as seguintes colunas (não são permiti
 
 ### Pré-requisitos
 
-1. Python 3.8 ou superior.
-2. Instale as dependências:
+1. **Python 3.8** ou superior.
+2. **AWS CLI** configurado com acesso válido.
+3. Instale as dependências:
    ```bash
    pip install -r requirements.txt
    ```
+
+### Configuração do Ambiente
+
+1. Configure as credenciais AWS em `~/.aws/credentials` ou diretamente no código (via `settings.py`).
+2. Certifique-se de que o dataset `dataset.csv` está em `data/` ou altere o caminho no arquivo `settings.py`.
 
 ### Executar o Chatbot
 
@@ -98,20 +105,17 @@ O chatbot utiliza um dataset que contém as seguintes colunas (não são permiti
 ## 🛡️ Validações Implementadas
 
 - **Validação de Perguntas**:
-  - Garante que o input do usuário está de acordo com o esquema do banco.
+  - Garante que o input do usuário é coerente e seguro.
 - **Validação de Queries SQL**:
-  - Verifica sintaxe SQL.
-  - Valida aderência às regras de negócio, como uso correto das colunas e funções.
+  - Verifica sintaxe SQL e bloqueia operações potencialmente destrutivas (`INSERT`, `UPDATE`, etc.).
 
 ---
 
 ## 📌 Próximos Passos
 
-- **Integração com AWS**:
-  - Utilizar **Boto3** e **Athena** para executar queries na nuvem.
 - **Melhorias na Análise**:
-  - Adicionar insights gráficos com **Plotly** ou **Matplotlib**.
-- **Suporte a Consultas Complexas**:
-  - Habilitar filtros mais avançados com múltiplos critérios.
+  - Adicionar gráficos e visualizações com **Plotly** ou **Matplotlib**.
+- **Otimização de Performance**:
+  - Implementar cache para evitar execução repetitiva de queries já realizadas.
 
 ---

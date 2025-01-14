@@ -119,3 +119,24 @@ O chatbot utiliza um dataset que contém as seguintes colunas (não são permiti
   - Implementar cache para evitar execução repetitiva de queries já realizadas.
 
 ---
+
+
+Aqui está o texto atualizado para adicionar ao **README** do projeto, destacando as futuras melhorias:
+
+---
+
+## 🔧 Futuras Melhorias
+
+- **Bucket Temporário para Consultas Athena**:
+  - Criar um bucket temporário dedicado para armazenar os resultados das consultas realizadas no Athena, garantindo maior organização e segurança.
+
+- **Automação com Terraform**:
+  - Utilizar **Terraform** para provisionar e gerenciar os recursos AWS necessários, incluindo:
+    - Tabela no AWS Glue.
+    - Definição de partições para otimizar consultas no Athena.
+    - Configuração do bucket S3 para armazenamento de dados e resultados das consultas.
+
+- **Particionamento de Dados**:
+  - Implementar o particionamento dos dados no S3 (por exemplo, por estado ou data), a fim de melhorar o desempenho e reduzir custos nas consultas realizadas com Athena.
+
+--- 

@@ -41,7 +41,7 @@ if st.button("Executar"):
 
         st.success("Query SQL validada com sucesso!")
 
-        st.write("**Executando query no dataset...**")
+        st.write("**Executando query na AWS**")
         executor = AthenaQueryExecutor()
         df_result = executor.execute_query(sql_query_replaced, AthenaConfig.DATABASE, AthenaConfig.OUTPUT_LOCATION)
 

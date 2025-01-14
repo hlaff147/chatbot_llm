@@ -6,80 +6,53 @@ chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=openai_ap
 
 def construct_validation_message():
     """
-    Constrói o prompt completo para validação da query SQL.
+    Constrói o prompt para validação de sintaxe e segurança da query SQL.
     """
     return "\n".join([
         get_intro_message(),
-        get_schema_message(),
-        get_business_rules_message(),
         get_syntax_rules_message(),
         get_response_format_message()
     ])
-    
+
 def get_intro_message():
     """
     Retorna a introdução do prompt.
     """
-    return """
-Você é um assistente especializado em validação de queries SQL. Sua tarefa é validar a query SQL fornecida para identificar possíveis erros e garantir que ela esteja correta tanto do ponto de vista técnico quanto de negócios.
-"""
-
-def get_schema_message():
-    """
-    Retorna a descrição do esquema do banco de dados.
-    """
-    return """
-Especificações do esquema:
-- O banco de dados contém as seguintes colunas (nenhuma query deve utilizar informações de outras colunas):
-  - REF_DATE: Data de referência do registro.
-  - TARGET: Alvo binário de inadimplência (1: Mau Pagador, i.e. atraso > 60 dias em 2 meses).
-  - VAR2: Sexo do indivíduo (masculino/feminino).
-  - IDADE: Idade do indivíduo.
-  - VAR4: Flag de óbito (indica se o indivíduo faleceu).
-  - VAR5: Unidade federativa (UF) brasileira.
-  - VAR8: Classe social estimada.
-"""
-
-def get_business_rules_message():
-    """
-    Retorna as regras de negócio para validação.
-    """
-    return """
-Regras de validação de negócio:
-1. A query deve utilizar apenas as colunas listadas acima.
-2. Nenhuma query deve referenciar tabelas ou colunas inexistentes.
-3. Nenhuma query deve executar operações de alteração, como:
-   - INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE.
-   - Apenas queries do tipo SELECT são permitidas.
-4. O uso de `TARGET` deve ser consistente com sua definição como um indicador binário de inadimplência.
-   - Exemplo: Calcular inadimplência média (AVG(TARGET)) para grupos específicos.
-5. O uso de `VAR4` deve verificar explicitamente valores binários.
-   - Exemplo: `WHERE VAR4 = 1` para registros onde o indivíduo faleceu.
-6. Agregações devem estar acompanhadas de cláusulas `GROUP BY` apropriadas.
-7. Caso utilize `IDADE`, deve ser possível identificar o contexto (exemplo: média de idade ou distribuição por faixa etária).
-8. Qualquer filtro ou cláusula `WHERE` deve ser consistente com os dados disponíveis no esquema.
-   - Exemplo: Filtrar por `VAR8 = 'Alta'` está correto, mas `VAR8 = 'Média-Alta'` não existe.
-9. Verifique se os nomes das colunas estão corretamente referenciados no contexto do esquema.
-"""
+    return (
+        "Você é um assistente especializado em validação de queries SQL. "
+        "Sua tarefa é verificar se a query SQL fornecida é sintaticamente correta "
+        "e não apresenta riscos de segurança, como operações proibidas."
+    )
 
 def get_syntax_rules_message():
     """
-    Retorna as regras para validação sintática.
+    Retorna as regras para validação sintática e de segurança.
     """
-    return """
-Regras de validação sintática:
-- Verifique os seguintes problemas comuns:
-  - Uso de `NOT IN` com valores NULL.
-  - Uso de `UNION` quando `UNION ALL` deveria ser usado.
-  - Uso de `BETWEEN` para intervalos exclusivos.
-  - Mismatch de tipo de dados em predicados.
-  - Identificadores não citados corretamente.
-  - Número incorreto de argumentos para funções.
-  - Cast para o tipo de dados incorreto.
-  - Uso inadequado de colunas em joins.
-- Bloqueie queries que contenham as seguintes palavras-chave:
-  - INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE.
-"""
+    return (
+        "Regras de validação:\n"
+        "1. Verifique os seguintes problemas comuns:\n"
+        "   - Uso de `NOT IN` com valores NULL.\n"
+        "   - Uso de `UNION` quando `UNION ALL` deveria ser usado.\n"
+        "   - Uso de `BETWEEN` para intervalos exclusivos.\n"
+        "   - Mismatch de tipo de dados em predicados.\n"
+        "   - Identificadores não citados corretamente.\n"
+        "   - Número incorreto de argumentos para funções.\n"
+        "   - Cast para o tipo de dados incorreto.\n"
+        "   - Uso inadequado de colunas em joins.\n"
+        "2. Bloqueie queries que contenham as seguintes palavras-chave:\n"
+        "   - INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE.\n"
+    )
+
+def get_response_format_message():
+    """
+    Retorna o formato esperado da resposta.
+    """
+    return (
+        "Formato esperado:\n"
+        "- Se a query for válida, responda: 'Válida: A query está correta.'\n"
+        "- Se a query for inválida, responda: 'Inválida: [Explique o problema encontrado].'\n"
+        "- Não forneça explicações adicionais ou corrija a query."
+    )
 
 def contains_prohibited_keywords(query):
     """
@@ -91,21 +64,9 @@ def contains_prohibited_keywords(query):
             return True
     return False
 
-
-def get_response_format_message():
-    """
-    Retorna o formato esperado da resposta.
-    """
-    return """
-Formato esperado da resposta:
-- Se a query for válida, responda: "Válida: A query está correta."
-- Se a query for inválida, responda: "Inválida: [Explique o problema encontrado]."
-- Não forneça explicações adicionais ou corrija a query.
-"""
-
 def validate_query_syntax(query_sql):
     """
-    Valida a sintaxe e aderência às regras de negócio de uma query SQL.
+    Valida a sintaxe e a segurança de uma query SQL.
     """
     try:
         if contains_prohibited_keywords(query_sql):
@@ -116,11 +77,10 @@ def validate_query_syntax(query_sql):
 
         system_message_content = construct_validation_message()
         system_message = SystemMessage(content=system_message_content)
-        
         human_message = HumanMessage(content=query_sql)
-        
+
         response = chat.invoke([system_message, human_message])
-        
+
         content = response.content.strip()
         if content.startswith("Válida"):
             return {

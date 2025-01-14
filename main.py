@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
 import json
-from aws_athena.query_consult import execute_query
+from aws_athena.query_consult import AthenaQueryExecutor
 from config.settings import csv_path
 from models.analyse_query_response import analyse_response_query
 from models.input_validator import validate_user_input
 from models.query_generator import generate_query
 from models.query_sql_validator import validate_query_syntax
 from utils.sql_extractor import extract_sql_query
+from config.settings import AthenaConfig
 
 df = pd.read_csv(csv_path)
 
@@ -41,14 +42,8 @@ if st.button("Executar"):
         st.success("Query SQL validada com sucesso!")
 
         st.write("**Executando query no dataset...**")
-        
-        df_result = execute_query(sql_query_replaced, "chatbot_athena_db", "s3://chatbot-dados-analise/result/")
-
-        if df_result is not None:
-          print("Resultado da Consulta:")
-          print(df_result)
-        else:
-          print("A consulta falhou.")
+        executor = AthenaQueryExecutor()
+        df_result = executor.execute_query(sql_query_replaced, AthenaConfig.DATABASE, AthenaConfig.OUTPUT_LOCATION)
 
         if isinstance(df_result, pd.DataFrame):
             st.write("**Resultado da Query:**")

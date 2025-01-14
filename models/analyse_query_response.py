@@ -37,14 +37,11 @@ def analyse_response_query(query_result):
     Gera uma resposta explicativa a partir do resultado da query.
     """
     try:
-        # Adiciona o resultado da query no contexto
         system_message_content = construct_analysis_message() + f"\nAqui está o resultado da query em formato tabular:\n{query_result}"
         system_message = SystemMessage(content=system_message_content)
         
-        # Invocar o modelo para gerar a análise
         response = chat.invoke([system_message])
         
-        # Retornar o resultado combinado
         return {
             "resultado_query": query_result,
             "analise": response.content

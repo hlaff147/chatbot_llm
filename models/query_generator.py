@@ -1,8 +1,8 @@
 from langchain_openai import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage
-from config.settings import openai_api_key
+from config.settings import OPENAI_API_KEY
 
-chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=openai_api_key)
+chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=OPENAI_API_KEY)
 
 def dataset_description():
     """Descrição do dataset e suas colunas, com exemplos detalhados."""

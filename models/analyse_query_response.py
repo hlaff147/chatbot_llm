@@ -1,13 +1,15 @@
 from langchain_openai import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage
-from config.settings import openai_api_key
+from config.settings import OPENAI_API_KEY
+from config.logging_config import logger  # Importa o logger configurado
 
-chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=openai_api_key)
+chat = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=OPENAI_API_KEY)
 
 def construct_analysis_message():
     """
     Constrói a mensagem do sistema para analisar o resultado da query.
     """
+    logger.debug("Construindo a mensagem do sistema para análise.")
     return """
 Você é um assistente especializado em análise de dados SQL. Sua tarefa é analisar os resultados de uma query SQL e apresentar uma resposta explicativa, clara e enfatizando os pontos mais importantes.
 
@@ -35,17 +37,28 @@ def analyse_response_query(query_result):
     """
     Gera uma resposta explicativa a partir do resultado da query.
     """
+    logger.info("Iniciando análise do resultado da query.")
     try:
+        # Log do resultado da query
+        logger.debug(f"Resultado da query recebido: {query_result}")
+        
         system_message_content = construct_analysis_message() + f"\nAqui está o resultado da query em formato tabular:\n{query_result}"
         system_message = SystemMessage(content=system_message_content)
         
+        # Log do conteúdo da mensagem do sistema
+        logger.debug(f"Mensagem do sistema construída: {system_message.content}")
+        
         response = chat.invoke([system_message])
+        
+        logger.info("Análise concluída com sucesso.")
+        logger.debug(f"Resposta gerada pelo modelo: {response.content}")
         
         return {
             "resultado_query": query_result,
             "analise": response.content
         }
     except Exception as e:
+        logger.error(f"Erro ao analisar o resultado da query: {e}")
         return {
             "resultado_query": query_result,
             "erro": f"Erro ao analisar o resultado da query: {e}"

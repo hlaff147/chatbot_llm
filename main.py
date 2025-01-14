@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 from aws_athena.query_consult import AthenaQueryExecutor
-from config.settings import csv_path
+from config.settings import CSV_PATH
 from models.analyse_query_response import analyse_response_query
 from models.input_validator import validate_user_input
 from models.query_generator import generate_query
@@ -10,7 +10,7 @@ from models.query_sql_validator import validate_query_syntax
 from utils.sql_extractor import extract_sql_query
 from config.settings import AthenaConfig
 
-df = pd.read_csv(csv_path)
+df = pd.read_csv(CSV_PATH)
 
 st.title("Chatbot de Análise de Dados SQL")
 st.subheader("Interaja com seu dataset de forma intuitiva!")

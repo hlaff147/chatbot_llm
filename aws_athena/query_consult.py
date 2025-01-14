@@ -2,6 +2,8 @@ import os
 import time
 import boto3
 import awswrangler as wr
+from config.logging_config import logger
+
 
 class AthenaQueryExecutor:
     def __init__(self, athena_client=None, sleep_interval=1):
@@ -43,7 +45,7 @@ class AthenaQueryExecutor:
             ResultConfiguration={"OutputLocation": output_location},
         )
         query_execution_id = response["QueryExecutionId"]
-        self._log_info(f"Consulta iniciada. ID: {query_execution_id}")
+        logger.info(f"Consulta iniciada. ID: {query_execution_id}")
         return query_execution_id
 
     def _wait_for_query_to_complete(self, query_execution_id):
@@ -57,7 +59,7 @@ class AthenaQueryExecutor:
             response = self.athena_client.get_query_execution(QueryExecutionId=query_execution_id)
             status = response["QueryExecution"]["Status"]["State"]
             if status == "SUCCEEDED":
-                self._log_info("Consulta concluída com sucesso.")
+                logger.info("Consulta concluída com sucesso.")
             elif status in ["FAILED", "CANCELLED"]:
                 raise Exception(f"Consulta falhou: {response['QueryExecution']['Status']['StateChangeReason']}")
             time.sleep(self.sleep_interval)
@@ -71,23 +73,5 @@ class AthenaQueryExecutor:
         :return: Pandas DataFrame contendo os resultados.
         """
         result_file_path = f"{output_location}{query_execution_id}.csv"
-        self._log_info(f"Resultado salvo em: {result_file_path}")
+        logger.info(f"Resultado salvo em: {result_file_path}")
         return wr.s3.read_csv(result_file_path, encoding="ISO-8859-1", path_suffix="csv")
-
-    @staticmethod
-    def _log_info(message):
-        """
-        Registra uma mensagem de informação.
-        
-        :param message: Mensagem a ser registrada.
-        """
-        print(f"[INFO] {message}")
-
-    @staticmethod
-    def _log_error(message):
-        """
-        Registra uma mensagem de erro.
-        
-        :param message: Mensagem a ser registrada.
-        """
-        print(f"[ERROR] {message}")

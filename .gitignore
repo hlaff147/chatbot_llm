@@ -1,5 +1,4 @@
 # Ignorar arquivos de configuração privados
-config/settings.py
 *.env
 
 # Ignorar credenciais ou chaves privadas

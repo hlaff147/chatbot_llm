@@ -56,3 +56,5 @@ build/
 
 # Ignorar dependências específicas da execução local
 node_modules/
+case_neurotech_video.mp4
+Desafio Hands-on Construir um Chatbot de Análise de Dados com LLMs.pdf

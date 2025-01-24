@@ -1,15 +1,8 @@
 from config.logging_config import logger
-from langchain_openai import ChatOpenAI
+from config.chat_factory import ChatFactory
 from langchain.schema import SystemMessage, HumanMessage
-from config.settings import OPENAI_API_KEY
 
-
-chat = ChatOpenAI(
-    model="gpt-3.5-turbo",
-    temperature=0,
-    openai_api_key=OPENAI_API_KEY,
-    model_kwargs={"response_format": {"type": "json_object"}}
-)
+from enums.role_enum import Role
 
 def construct_validation_message():
     """
@@ -49,6 +42,8 @@ def validate_user_input(user_input):
     logger.info("Iniciando validação do input do usuário.")
     try:
         logger.debug(f"Input recebido para validação: {user_input}")
+        
+        chat = ChatFactory.create_chat(Role.VALIDATION_QUESTION)
         
         system_message_content = construct_validation_message()
         system_message = SystemMessage(content=system_message_content)
